@@ -29,7 +29,7 @@ import javax.jcr.Session;
 /**
  * @author <a href="mailto:julien.viet@exoplatform.com">Julien Viet</a>
  */
-public class WeirdBug1TestCase extends TestCase {
+public class WeirdBug2TestCase extends TestCase {
 
   /** . */
   private Repository repo;
@@ -43,50 +43,30 @@ public class WeirdBug1TestCase extends TestCase {
 
   public void testBug() throws Exception {
 
-    // commented as I need to make a release
     Session session = repo.login();
-    Node list = session.getRootNode().addNode("list1", "list");
+    Node list = session.getRootNode().addNode("list2", "list");
     assertEquals("list", list.getPrimaryNodeType().getName());
     assertTrue(list.getPrimaryNodeType().hasOrderableChildNodes());
-    list.addNode("foo", "nt:unstructured");
-    list.addNode("bar", "nt:unstructured");
-    list.addNode("juu", "nt:unstructured");
+
+    //
+    String path = list.addNode("1").getPath();
+    list.addNode("2");
     session.save();
     session.logout();
 
     //
     session = repo.login();
-    list = session.getRootNode().getNode("list1");
-    list.getNode("bar").remove();
+    list = session.getRootNode().getNode("list2");
+    session.move(path, list.getPath() + "/3");
+    list.orderBefore("3", "2");
     session.save();
     session.logout();
 
     //
     session = repo.login();
-    list = session.getRootNode().getNode("list1");
-    list.addNode("daa", "nt:unstructured");
-    NodeIterator it = list.getNodes();
-    Node foo = it.nextNode();
-    assertEquals("foo", foo.getName());
-    Node juu = it.nextNode();
-    assertEquals("juu", juu.getName());
-    Node daa = it.nextNode();
-    assertEquals("daa", daa.getName());
-    assertFalse(it.hasNext());
-    session.save();
-    session.logout();
-
-    //
-    session = repo.login();
-    list = session.getRootNode().getNode("list1");
-    it = list.getNodes();
-    foo = it.nextNode();
-    assertEquals("foo", foo.getName());
-    juu = it.nextNode();
-    assertEquals("juu", juu.getName());
-    daa = it.nextNode();
-    assertEquals("daa", daa.getName());
-    assertFalse(it.hasNext());
+    NodeIterator it = session.getRootNode().getNode("list2").getNodes();
+    assertEquals("3", it.nextNode().getName());
+    assertEquals("2", it.nextNode().getName());
     session.logout();
   }
 }
