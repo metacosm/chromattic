@@ -493,7 +493,30 @@ public class DomainSessionImpl extends DomainSession {
         }
       }
     } else {
+
+       //
+      boolean reorder = srcNode.getParent() == dstNode && dstNode.getPrimaryNodeType().hasOrderableChildNodes();
+      Node after = null;
+      if (reorder) {
+        NodeIterator i = srcNode.getParent().getNodes();
+        while (i.hasNext()) {
+          Node n = i.nextNode();
+          if (n == srcNode) {
+            if (i.hasNext()) {
+              after = i.nextNode();
+            }
+            break;
+          }
+        }
+      }
+
+      //
       sessionWrapper.move(srcNode, dstNode, dstName);
+
+      //
+      if (after != null) {
+        sessionWrapper.orderBefore(dstNode, srcNode , after);
+      }
     }
 
     // Generate some kind of event ????
